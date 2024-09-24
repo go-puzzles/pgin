@@ -22,7 +22,7 @@ type HelloResponse struct {
 }
 
 func main() {
-	engine := gin.Default()
+	engine := pgin.Default()
 
 	engine.GET("/hello", pgin.RequestHandler(func(c *gin.Context, req *HelloRequest) {
 		c.JSON(200, gin.H{
@@ -31,6 +31,9 @@ func main() {
 	}))
 
 	engine.GET("/hello/response", pgin.RequestResponseHandler(func(c *gin.Context, req *HelloRequest) (resp *HelloResponse, err error) {
+		if req.Name == "error" {
+			return nil, pgin.PackError(4444, "test error")
+		}
 		return &HelloResponse{
 			Message: "Hello, " + req.Name,
 		}, nil

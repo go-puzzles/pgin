@@ -14,6 +14,7 @@ import (
 	"github.com/gin-contrib/sessions/memstore"
 	redisStore "github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/go-puzzles/puzzles/plog"
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -45,7 +46,7 @@ func InitRedisStore(pool *redis.Pool, keyPairs ...[]byte) *RedisStore {
 func (r *RedisStore) GetStore() sessions.Store {
 	store, err := redisStore.NewStoreWithPool(r.pool, r.keyPairs...)
 	if err != nil {
-		panic(err)
+		plog.Fatalf("new redis store failed: %v", err)
 	}
 	return store
 }

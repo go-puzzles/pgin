@@ -9,9 +9,11 @@
 package pgin
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-puzzles/puzzles/plog"
 )
 
 func parseRequestParams(c *gin.Context, obj any) (err error) {
@@ -67,17 +69,37 @@ func RequestResponseHandler[Q any, P any](fn requestResponseHandler[Q, P]) gin.H
 		}
 
 		resp, err := fn(c, requestPtr)
-		currentStatus := c.Writer.Status()
-
 		if err != nil {
-			if currentStatus <= http.StatusBadRequest {
-				currentStatus = http.StatusBadRequest
-			}
-
-			c.JSON(currentStatus, ErrorRet(currentStatus, err.Error()))
+			parseError(c, err)
 			return
 		}
 
 		c.JSON(http.StatusOK, SuccessRet(resp))
 	}
+}
+
+func parseError(c *gin.Context, err error) {
+	var (
+		ie       *internalError
+		code     int
+		respCode int
+		message  string
+	)
+
+	if errors.As(err, &ie) {
+		code = ie.Code()
+		respCode = ie.Code()
+		message = ie.Message()
+	} else {
+		code = c.Writer.Status()
+		respCode = code
+		message = err.Error()
+	}
+
+	if http.StatusText(code) == "" {
+		code = http.StatusBadRequest
+	}
+
+	c.JSON(code, ErrorRet(respCode, message))
+	plog.Errorf("handle request: %s error: %v", c.Request.URL.Path, err)
 }
