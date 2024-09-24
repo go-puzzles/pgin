@@ -78,6 +78,32 @@ func RequestResponseHandler[Q any, P any](fn requestResponseHandler[Q, P]) gin.H
 	}
 }
 
+type responseHandler[P any] func(c *gin.Context) (resp *P, err error)
+
+func ResponseHandler[P any](fn responseHandler[P]) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		resp, err := fn(c)
+		if err != nil {
+			parseError(c, err)
+			return
+		}
+
+		c.JSON(http.StatusOK, SuccessRet(resp))
+	}
+}
+
+type errorReturnHandler func(c *gin.Context) (err error)
+
+func ErrorReturnHandler(fn errorReturnHandler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := fn(c)
+		if err != nil {
+			parseError(c, err)
+			return
+		}
+	}
+}
+
 func parseError(c *gin.Context, err error) {
 	var (
 		ie       *internalError
