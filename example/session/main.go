@@ -25,7 +25,7 @@ type HelloResponse struct {
 
 func main() {
 	engine := gin.Default()
-	engine.Use(pgin.NewSession("__test_session", pgin.InitMemStore([]byte("asdfasfdasdf"))))
+	engine.Use(pgin.NewSession("__test_session", pgin.InitCookieStore()))
 
 	engine.GET("/hello", pgin.RequestHandler(func(c *gin.Context, req *HelloRequest) {
 		session := pgin.GetSession(c)

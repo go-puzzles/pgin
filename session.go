@@ -15,6 +15,7 @@ import (
 	redisStore "github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/go-puzzles/puzzles/plog"
+	"github.com/go-puzzles/puzzles/putils"
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -27,6 +28,9 @@ type CookieStore struct {
 }
 
 func InitCookieStore(keyPairs ...[]byte) *CookieStore {
+	if len(keyPairs) == 0 {
+		keyPairs = append(keyPairs, []byte(putils.RandString(8)))
+	}
 	return &CookieStore{keyPairs: keyPairs}
 }
 
@@ -40,6 +44,9 @@ type RedisStore struct {
 }
 
 func InitRedisStore(pool *redis.Pool, keyPairs ...[]byte) *RedisStore {
+	if len(keyPairs) == 0 {
+		keyPairs = append(keyPairs, []byte(putils.RandString(8)))
+	}
 	return &RedisStore{pool: pool, keyPairs: keyPairs}
 }
 
@@ -56,6 +63,9 @@ type MemoryStore struct {
 }
 
 func InitMemStore(keyPairs ...[]byte) *MemoryStore {
+	if len(keyPairs) == 0 {
+		keyPairs = append(keyPairs, []byte(putils.RandString(8)))
+	}
 	return &MemoryStore{keyPairs: keyPairs}
 }
 
