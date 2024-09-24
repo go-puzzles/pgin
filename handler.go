@@ -129,3 +129,21 @@ func parseError(c *gin.Context, err error) {
 	c.JSON(code, ErrorRet(respCode, message))
 	plog.Errorf("handle request: %s error: %v", c.Request.URL.Path, err)
 }
+
+type requestWithErrorHandler[Q any] func(c *gin.Context, req *Q) (err error)
+
+func RequestWithErrorHandler[Q any](fn requestWithErrorHandler[Q]) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestPtr := new(Q)
+
+		if err := parseRequestParams(c, requestPtr); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		if err := fn(c, requestPtr); err != nil {
+			parseError(c, err)
+			return
+		}
+	}
+}
