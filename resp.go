@@ -17,7 +17,7 @@ type Ret struct {
 }
 
 func SuccessRet(data any) *Ret {
-	return &Ret{Code: 0, Data: data, Message: "success"}
+	return &Ret{Code: 200, Data: data, Message: "success"}
 }
 
 func ErrorRet(code int, message any) *Ret {
