@@ -10,41 +10,48 @@ package pgin
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-puzzles/puzzles/plog"
 )
 
-func parseRequestParams(c *gin.Context, obj any) (err error) {
-	fmt.Println(c.Params)
-
-	if len(c.Params) > 0 {
-		if err = c.BindUri(obj); err != nil {
-			return
-		}
+var (
+	bindLoop = []bindStratrgy{
+		&headerBind{},
+		&urlBind{},
+		&queryBind{},
 	}
+)
 
-	if len(c.Request.Header) > 0 {
-		if err = c.BindHeader(obj); err != nil {
-			return
+func ParseRequestParams(c *gin.Context, obj any) (err error) {
+	for _, b := range bindLoop {
+		if !b.Need(c) {
+			continue
 		}
-	}
 
-	if len(c.Request.URL.Query()) > 0 {
-		if err = c.BindQuery(obj); err != nil {
-			return
+		err = b.Bind(c, obj)
+		if err == nil {
+			continue
+		}
+
+		switch err.(type) {
+		case validator.ValidationErrors:
+			err = nil
+		case binding.SliceValidationError:
+			err = nil
+		default:
+			return err
 		}
 	}
 
 	return c.Bind(obj)
 }
 
-func validateRequestParams(obj any) (err error) {
-	validate := validator.New()
-	return validate.Struct(obj)
+func ValidateRequestParams(obj any) (err error) {
+	return binding.Validator.ValidateStruct(obj)
 }
 
 type requestHandler[Q any] func(c *gin.Context, req *Q)
@@ -54,12 +61,12 @@ func RequestHandler[Q any](fn requestHandler[Q]) gin.HandlerFunc {
 		var err error
 		requestPtr := new(Q)
 
-		if err = parseRequestParams(c, requestPtr); err != nil {
+		if err = ParseRequestParams(c, requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
 
-		if err = validateRequestParams(requestPtr); err != nil {
+		if err = ValidateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
@@ -75,12 +82,12 @@ func RequestResponseHandler[Q any, P any](fn requestResponseHandler[Q, P]) gin.H
 		requestPtr := new(Q)
 		var err error
 
-		if err = parseRequestParams(c, requestPtr); err != nil {
+		if err = ParseRequestParams(c, requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
 
-		if err = validateRequestParams(requestPtr); err != nil {
+		if err = ValidateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
@@ -154,12 +161,12 @@ func RequestWithErrorHandler[Q any](fn requestWithErrorHandler[Q]) gin.HandlerFu
 		requestPtr := new(Q)
 		var err error
 
-		if err = parseRequestParams(c, requestPtr); err != nil {
+		if err = ParseRequestParams(c, requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
 
-		if err = validateRequestParams(requestPtr); err != nil {
+		if err = ValidateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
