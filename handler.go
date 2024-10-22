@@ -10,6 +10,7 @@ package pgin
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,9 +19,7 @@ import (
 )
 
 func parseRequestParams(c *gin.Context, obj any) (err error) {
-	if err = c.Bind(obj); err != nil {
-		return
-	}
+	fmt.Println(c.Params)
 
 	if len(c.Params) > 0 {
 		if err = c.BindUri(obj); err != nil {
@@ -40,10 +39,10 @@ func parseRequestParams(c *gin.Context, obj any) (err error) {
 		}
 	}
 
-	return
+	return c.Bind(obj)
 }
 
-func validateRequestParams(c *gin.Context, obj any) (err error) {
+func validateRequestParams(obj any) (err error) {
 	validate := validator.New()
 	return validate.Struct(obj)
 }
@@ -60,7 +59,7 @@ func RequestHandler[Q any](fn requestHandler[Q]) gin.HandlerFunc {
 			return
 		}
 
-		if err = validateRequestParams(c, requestPtr); err != nil {
+		if err = validateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
@@ -74,8 +73,14 @@ type requestResponseHandler[Q any, P any] func(c *gin.Context, req *Q) (resp *P,
 func RequestResponseHandler[Q any, P any](fn requestResponseHandler[Q, P]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestPtr := new(Q)
+		var err error
 
-		if err := parseRequestParams(c, requestPtr); err != nil {
+		if err = parseRequestParams(c, requestPtr); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		if err = validateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
@@ -147,8 +152,14 @@ type requestWithErrorHandler[Q any] func(c *gin.Context, req *Q) (err error)
 func RequestWithErrorHandler[Q any](fn requestWithErrorHandler[Q]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestPtr := new(Q)
+		var err error
 
-		if err := parseRequestParams(c, requestPtr); err != nil {
+		if err = parseRequestParams(c, requestPtr); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		if err = validateRequestParams(requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
