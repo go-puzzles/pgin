@@ -13,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/go-puzzles/puzzles/plog"
 )
 
@@ -42,13 +43,24 @@ func parseRequestParams(c *gin.Context, obj any) (err error) {
 	return
 }
 
+func validateRequestParams(c *gin.Context, obj any) (err error) {
+	validate := validator.New()
+	return validate.Struct(obj)
+}
+
 type requestHandler[Q any] func(c *gin.Context, req *Q)
 
 func RequestHandler[Q any](fn requestHandler[Q]) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var err error
 		requestPtr := new(Q)
 
-		if err := parseRequestParams(c, requestPtr); err != nil {
+		if err = parseRequestParams(c, requestPtr); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
+			return
+		}
+
+		if err = validateRequestParams(c, requestPtr); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorRet(http.StatusBadRequest, err.Error()))
 			return
 		}
