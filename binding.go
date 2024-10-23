@@ -22,7 +22,7 @@ func (b *headerBind) Need(c *gin.Context) bool {
 }
 
 func (b *headerBind) Bind(c *gin.Context, obj any) error {
-	return c.BindHeader(obj)
+	return c.ShouldBindHeader(obj)
 }
 
 type urlBind struct{}
@@ -32,7 +32,7 @@ func (b *urlBind) Need(c *gin.Context) bool {
 }
 
 func (b *urlBind) Bind(c *gin.Context, obj any) error {
-	return c.BindUri(obj)
+	return c.ShouldBindUri(obj)
 }
 
 type queryBind struct{}
@@ -42,5 +42,5 @@ func (b *queryBind) Need(c *gin.Context) bool {
 }
 
 func (b *queryBind) Bind(c *gin.Context, obj any) error {
-	return c.BindQuery(obj)
+	return c.ShouldBindQuery(obj)
 }
