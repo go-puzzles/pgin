@@ -41,7 +41,7 @@ func NewStandardServerHandler() *gin.Engine {
 }
 
 func NewServerHandlerWithOptions(opts ...Option) *gin.Engine {
-	engine := NewServerHandler()
+	engine := NewStandardServerHandler()
 	for _, opt := range opts {
 		opt(engine)
 	}
