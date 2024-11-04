@@ -48,7 +48,7 @@ func LoggerMiddleware(loggers ...plog.Logger) gin.HandlerFunc {
 		case statusCode >= http.StatusMultipleChoices && statusCode < http.StatusBadRequest:
 			logFunc = logger.Warnc
 		case statusCode >= http.StatusBadRequest && statusCode <= http.StatusNetworkAuthenticationRequired:
-			logFunc = logger.Errorc
+			logFunc = logger.Warnc
 		default:
 			logFunc = logger.Errorc
 		}

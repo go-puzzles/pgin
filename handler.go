@@ -125,6 +125,8 @@ func ErrorReturnHandler(fn errorReturnHandler) gin.HandlerFunc {
 			parseError(c, err)
 			return
 		}
+
+		c.JSON(http.StatusOK, SuccessRet(nil))
 	}
 }
 
@@ -175,5 +177,7 @@ func RequestWithErrorHandler[Q any](fn requestWithErrorHandler[Q]) gin.HandlerFu
 			parseError(c, err)
 			return
 		}
+
+		c.JSON(http.StatusOK, SuccessRet(nil))
 	}
 }

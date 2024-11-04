@@ -12,8 +12,8 @@ import "github.com/gin-gonic/gin"
 
 type Ret struct {
 	Code    int `json:"code"`
-	Data    any `json:"data"`
-	Message any `json:"message"`
+	Data    any `json:"data,omitempty"`
+	Message any `json:"message,omitempty"`
 }
 
 func SuccessRet(data any) *Ret {
